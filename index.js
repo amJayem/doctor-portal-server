@@ -19,11 +19,12 @@ async function run(){
     try{
         const appointmentOptionCollection = client.db('doctor-portal').collection('appointment-options');
         const bookingsCollection = client.db('doctor-portal').collection('bookings');
+        const usersCollection = client.db('doctor-portal').collection('users');
 
         app.get('/appointmentOptions', async(req,res)=>{
             const query = {}
             const date = req.query.date;
-            console.log('date: ',date);
+            // console.log('date: ',date);
             const options = await appointmentOptionCollection.find(query).toArray();
              // get the bookings of the provided date
              const bookingQuery = { AppointmentDate: date }
@@ -36,15 +37,23 @@ async function run(){
                  const remainingSlots = option.slots.filter(slot => !bookedSlots.includes(slot))
                  option.slots = remainingSlots;
 
-                 console.log(date, option.name,remainingSlots.length);
+                //  console.log(date, option.name,remainingSlots.length);
              })
 
             res.send(options);
         });
 
+        app.get('/bookings', async(req,res)=>{
+            const email = req.query.email;
+            const query = {email: email};
+            const bookings = await bookingsCollection.find(query).toArray();
+            
+            res.send(bookings);
+        })
+
         app.post('/bookings', async(req, res)=>{
             const booking = req.body;
-            console.log(booking);
+            // console.log(booking);
             const query = {
                 AppointmentDate: booking.AppointmentDate,
                 email: booking.email,
@@ -61,6 +70,14 @@ async function run(){
             const result = await bookingsCollection.insertOne(booking);
 
             res.send(result);
+        });
+
+        app.post('/users', async(req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await usersCollection.insertOne(user);
+
+            res.send(result)
         })
 
     }
