@@ -153,7 +153,14 @@ async function run(){
             const result = await usersCollection.updateOne(filter, updateDoc, options)
 
             res.send(result);
-        })
+        });
+
+        app.get('/specialty', async (req, res)=>{
+            const query = {};
+            const specialty = await appointmentOptionCollection.find(query).project({name: 1}).toArray();
+
+            res.send(specialty);
+        });
 
     }
     finally {}
