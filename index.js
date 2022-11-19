@@ -40,6 +40,7 @@ async function run(){
         const appointmentOptionCollection = client.db('doctor-portal').collection('appointment-options');
         const bookingsCollection = client.db('doctor-portal').collection('bookings');
         const usersCollection = client.db('doctor-portal').collection('users');
+        const doctorsCollection = client.db('doctor-portal').collection('doctors');
 
         app.get('/appointmentOptions', async(req,res)=>{
             const query = {}
@@ -161,6 +162,13 @@ async function run(){
 
             res.send(specialty);
         });
+
+        app.post('/doctors', async(req,res)=>{
+            const doctor = req.body;
+            const result = await doctorsCollection.insertOne(doctor);
+
+            res.send(result);
+        })
 
     }
     finally {}
