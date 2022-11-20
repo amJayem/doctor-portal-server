@@ -76,6 +76,53 @@ async function run(){
             res.send(options);
         });
 
+        app.get('v2/appointmentOptions', async(req,res)=>{
+            const date = req.query.date;
+            const options = await appointmentOptionCollection.aggregate([
+                {
+                    $lookup: {
+                        from: 'bookings',
+                        localField: 'name',
+                        foreignField: 'treatment',
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $eq: ['$appointment', date]
+                                    }
+                                }
+                            }
+                        ],
+                        as: 'booked'
+                    }
+                },
+                {
+                    $project: {
+                        name: 1,
+                        price: 1,
+                        slots: 1,
+                        booked: {
+                            $map: {
+                                input: '$booked',
+                                as: 'book',
+                                in: '$book.slot'
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        name: 1,
+                        price: 1,
+                        slots: {
+                            $setDifference: ['$slots', '$booked']
+                        }
+                    }
+                }
+            ]).toArray();
+            res.send(options);
+        });
+
         app.get('/bookings',verifyJWT, async(req,res)=>{
             const email = req.query.email;
             const query = {email: email};
@@ -161,6 +208,18 @@ async function run(){
 
             res.send(result);
         });
+
+        // temporary to update price field on appointment options
+        app.get('/addPrice', async(req,res)=>{
+            const filter = {};
+            const options = { upsert: true};
+            const updateDoc = {
+                $set: { price: 99}
+            };
+            const result = await appointmentOptionCollection.updateMany(filter, updateDoc, options);
+            
+            res.send(result);
+        })
 
         app.get('/specialty', async (req, res)=>{
             const query = {};
